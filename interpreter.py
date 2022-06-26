@@ -211,8 +211,8 @@ def tokenize(s):
         ('while', r'He ran up into the mountains \(but only when.*\)\. This is what happened there\:'),
         ('loopend', r'Alas, I digress\.'),
         ('store', r'Preparing for the storm, he inscribed \".*\" into the stone\.'),
-        ('copyval', r'One day he stole his neighbor\'s goods.'),
-        ('pasteval', r'He repented and returned the property.'),
+        ('copyval', r'One day he stole his neighbor\'s goods\.'),
+        ('pasteval', r'He repented and returned the property\.'),
         ('s', r'\s+')
     ]
 
@@ -271,4 +271,3 @@ def processFile(fn):
     interpret(f)
 
 
-processFile('test.txt')
