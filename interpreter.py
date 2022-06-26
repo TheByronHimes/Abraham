@@ -8,6 +8,7 @@ gv['buffer'] = []
 gv['tokens'] = list()
 gv['loopcons'] = list()
 gv['loopactions'] = list()
+gv['cval'] = 0
     
 def mr():
     raw = gv['tokens'].pop()
@@ -38,7 +39,9 @@ def decr():
 
 
 def getInput():
-    gv['tape'][gv['i']] = input()
+    x = input()
+    x = cast(getParmType(x), x)
+    gv['tape'][gv['i']] = x
 
 
 def storeVal():
@@ -66,15 +69,26 @@ def loop():
 
 def loopend():
     op, val = gv['loopcons'][-1]
-    if op(gv['tape'][gv['i']], val):
+    condition_met = op(gv['tape'][gv['i']], val)
+    
+    if condition_met:
         # if loop conditions are met, re-append the loop actions
+        gv['tokens'].append('loopend')
         gv['tokens'].extend(gv['loopactions'][-1])
         
     else:
         # if loop conditions aren't met, pop off that loop
         gv['loopcons'].pop()
         gv['loopactions'].pop()
-        
+
+
+def copyVal():
+    gv['cval'] = gv['tape'][gv['i']]
+
+
+def pasteVal():
+    gv['tape'][gv['i']] = gv['cval']
+
 
 def cast(typeString, val):
     d = dict()
@@ -126,7 +140,7 @@ def processCond(match):
 
     optype = re.search(ms, cond).lastgroup
     
-    if optype in ['>', '<', 'deq']:
+    if optype in ['gt', 'lt', 'deq']:
         d = re.search(r'\d+', cond)
         if d:
             val = d.group()
@@ -161,10 +175,11 @@ def processStoreToken(match):
     s = match.string[match.start():match.end()]
     ms = re.compile(r'\".*\"')
     val = re.search(ms, s)
-    return 'store' + ',' + val.group()
+    return val.group()
     
 
 def consumeToken(token):
+    #print(gv['tape'])
     comms = dict()
     comms['mr'] = mr
     comms['ml'] = ml
@@ -175,6 +190,8 @@ def consumeToken(token):
     comms['pout'] = printCell
     comms['while'] = loop
     comms['loopend'] = loopend
+    comms['copyval'] = copyVal
+    comms['pasteval'] = pasteVal
     comms[token]()
           
           
@@ -190,10 +207,12 @@ def tokenize(s):
         ('incr', r'He sold \d* sheep\.'),
         ('decr', r'They paid for their \d* mistakes\.'),
         ('pout', r'And Abraham spoke!'), 
-        ('pin', r'He listened when his wife said'),
-        ('while', r'He ran up into the mountains \(But only when.*\)\. This is what happened there:'),
+        ('pin', r'He listened when his wife spoke\.'),
+        ('while', r'He ran up into the mountains \(but only when.*\)\. This is what happened there\:'),
         ('loopend', r'Alas, I digress\.'),
         ('store', r'Preparing for the storm, he inscribed \".*\" into the stone\.'),
+        ('copyval', r'One day he stole his neighbor\'s goods.'),
+        ('pasteval', r'He repented and returned the property.'),
         ('s', r'\s+')
     ]
 
@@ -206,17 +225,23 @@ def tokenize(s):
         if m.lastgroup == 's':
             lastend = m.end()
             continue
+        
         if m.start() != lastend:
             output.append('error')
             return output
+        
         if m.lastgroup in ['mr', 'ml', 'incr', 'decr']:
             output.append(m.lastgroup)   
             output.append(processDigitToken(m))
+            
         elif m.lastgroup == 'store':
+            output.append(m.lastgroup)   
             output.append(processStoreToken(m))
+            
         elif m.lastgroup == 'while':
             output.append(m.lastgroup)
             output.extend(processCond(m))
+            
         else:
             output.append(m.lastgroup)
         lastend = m.end()
@@ -237,10 +262,13 @@ def interpret(abraham_code, *args):
         And Abraham spoke!'
         
     gv['tokens'] = tokenize(abraham_code)
+    #print(gv['tokens'])
     consumeTokenList()
 
-while True:
-    interpret(input('Tell us more about Abraham: '))
-    print(gv['tape'])
+
+def processFile(fn):
+    f = open(fn, 'r').read()
+    interpret(f)
 
 
+processFile('test.txt')
