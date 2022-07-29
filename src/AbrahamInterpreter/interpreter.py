@@ -9,142 +9,142 @@ rs = {
 }
 
 
-class Interpreter:
+class AbeInterpreter:
 
     def __init__(self):
-        self.i = 0
-        self.tape = [0]
-        self.buffer = []
-        self.tokens = list()
-        self.loopcons = list()
-        self.loopactions = list()
-        self.currentlooplevel = 0
-        self.cval = 0
-        self.output = ''
-        self.has_error = False
-        self.error = ''
+        self._i = 0
+        self._tape = [0]
+        self._buffer = []
+        self._tokens = list()
+        self._loopcons = list()
+        self._loopactions = list()
+        self._currentlooplevel = 0
+        self._cval = 0
+        self._output = ''
+        self._has_error = False
+        self._error = ''
 
     
-    def mr(self):
-        raw = self.tokens.pop()
-        v = self.cast(getParmType(raw), raw)
-        self.i += v
-        length = len(self.tape) - 1
-        if self.i > length:
-            for n in range(length, self.i + 1):
-                self.tape.append(0)
+    def _mr(self):
+        raw = self._tokens.pop()
+        v = self._cast(getParmType(raw), raw)
+        self._i += v
+        length = len(self._tape) - 1
+        if self._i > length:
+            for n in range(length, self._i + 1):
+                self._tape.append(0)
 
 
-    def ml(self):
-        raw = self.tokens.pop()
-        v = self.cast(self.getParmType(raw), raw)
-        self.i -= v
-        if self.i < 0:
-            self.has_error = True
+    def _ml(self):
+        raw = self._tokens.pop()
+        v = self._cast(self._getParmType(raw), raw)
+        self._i -= v
+        if self._i < 0:
+            self._has_error = True
 
 
-    def incr(self):
-        raw = self.tokens.pop()
-        v = self.cast(self.getParmType(raw), raw)
-        self.tape[self.i] += v
+    def _incr(self):
+        raw = self._tokens.pop()
+        v = self._cast(self._getParmType(raw), raw)
+        self._tape[self._i] += v
 
 
-    def decr(self):
-        raw = self.tokens.pop()
-        v = self.cast(self.getParmType(raw), raw)
-        self.tape[self.i] -= v
+    def _decr(self):
+        raw = self._tokens.pop()
+        v = self._cast(self._getParmType(raw), raw)
+        self._tape[self._i] -= v
 
 
-    def getInput(self):
+    def _getInput(self):
         x = input()
-        x = self.cast(self.getParmType(x), x)
-        self.tape[self.i] = x
+        x = self._cast(self._getParmType(x), x)
+        self._tape[self._i] = x
 
 
-    def storeVal(self):
-        raw = self.tokens.pop()
-        v = self.cast(self.getParmType(raw), raw)
-        self.buffer = self.buffer[1:]
-        self.tape[self.i] = v
+    def _storeVal(self):
+        raw = self._tokens.pop()
+        v = self._cast(self._getParmType(raw), raw)
+        self._buffer = self._buffer[1:]
+        self._tape[self._i] = v
 
 
-    def doLoop(self):
-        raw = self.tokens.pop()
-        loop_id = self.cast(self.getParmType(raw), raw)
+    def _doLoop(self):
+        raw = self._tokens.pop()
+        loop_id = self._cast(self._getParmType(raw), raw)
 
         # get conditions linked to this loop
-        op, val = self.loopcons[loop_id]
-        condition_met = op(self.tape[self.i], val)
+        op, val = self._loopcons[loop_id]
+        condition_met = op(self._tape[self._i], val)
 
         # if conditions are met, push the loop actions onto the tokens stack
         if condition_met:
-            self.tokens.extend(self.loopactions[loop_id])
+            self._tokens.extend(self._loopactions[loop_id])
 
 
-    def defineLoop(self):
+    def _defineLoop(self):
 
         # get the loop condition's operator (rawOp) and value (rawVal)
-        rawOp = self.tokens.pop()
-        rawVal = self.tokens.pop()
+        rawOp = self._tokens.pop()
+        rawVal = self._tokens.pop()
         ops = {'>':operator.gt, '<':operator.lt, '==':operator.eq}
 
         # dict with string as key and function as value
         op = ops[rawOp]
-        val = self.cast(self.getParmType(rawVal), rawVal)
+        val = self._cast(self._getParmType(rawVal), rawVal)
 
         # add the loop condition to the loop condition stack
-        self.loopcons.append([op, val])
-        loopIndex = len(self.loopactions)
-        self.currentlooplevel += 1
-        is_inner_loop = self.currentlooplevel > 1  # outermost loop will have loop level 1
+        self._loopcons.append([op, val])
+        loopIndex = len(self._loopactions)
+        self._currentlooplevel += 1
+        is_inner_loop = self._currentlooplevel > 1  # outermost loop will have loop level 1
 
         # need to evaluate actions within loop
-        self.loopactions.append(list())
+        self._loopactions.append(list())
         while True:
-            if self.tokens[-1] == 'while':
-                self.tokens.pop()
-                self.loopactions[loopIndex].extend(defineLoop())  # include tokens for any inner loops
-            if self.tokens[-1] == 'loopend':
+            if self._tokens[-1] == 'while':
+                self._tokens.pop()
+                self._loopactions[loopIndex].extend(defineLoop())  # include tokens for any inner loops
+            if self._tokens[-1] == 'loopend':
                 # can either be loopend token for inner loop or for this loop
-                self.tokens.pop()
+                self._tokens.pop()
                 break  # either way, exit while loop
             else:
                 # append normal token to list of actions for this loop
-                self.loopactions[loopIndex].append(self.tokens.pop())
+                self._loopactions[loopIndex].append(self._tokens.pop())
 
         # when we get to the end of the loop actions, re-evaluate loop condition
-        self.loopactions[loopIndex].append('loop')
-        self.loopactions[loopIndex].append(str(loopIndex))  # adds loop to end of itself for re-eval
-        self.loopactions[loopIndex].reverse()
+        self._loopactions[loopIndex].append('loop')
+        self._loopactions[loopIndex].append(str(loopIndex))  # adds loop to end of itself for re-eval
+        self._loopactions[loopIndex].reverse()
 
-        self.currentlooplevel -= 1
+        self._currentlooplevel -= 1
 
         if is_inner_loop:  # all inner loops will return their loop token to containing loop
             return ['loop', str(loopIndex)]
         else:  # is base-level loop, so push on loop tokens for stack
-            self.tokens.append(str(loopIndex))
-            self.tokens.append('loop')
+            self._tokens.append(str(loopIndex))
+            self._tokens.append('loop')
 
 
-    def loopend(self):
-        op, val = self.loopcons[-1]
-        condition_met = op(self.tape[self.i], val)
+    def _loopend(self):
+        op, val = self._loopcons[-1]
+        condition_met = op(self._tape[self._i], val)
 
         if condition_met:
             # if loop conditions are met, re-append the loop actions
-            self.tokens.append('loopend')
-            self.tokens.extend(self.loopactions[-1])
+            self._tokens.append('loopend')
+            self._tokens.extend(self._loopactions[-1])
 
 
-    def copyVal(self):
-        self.cval = self.tape[self.i]
+    def _copyVal(self):
+        self._cval = self._tape[self._i]
 
 
-    def pasteVal(self):
-        self.tape[self.i] = self.cval
+    def _pasteVal(self):
+        self._tape[self._i] = self._cval
 
 
-    def cast(self, typeString, val):
+    def _cast(self, typeString, val):
         d = dict()
         d['float'] = float
         d['int'] = int
@@ -156,10 +156,10 @@ class Interpreter:
                 val = val.strip('"')
             return d[typeString](val)
         except:
-            self.has_error = True
+            self._has_error = True
 
 
-    def getParmType(self, p):
+    def _getParmType(self, p):
         tokens = [
             ('float', r'\-?\d+\.\d*'),
             ('int', r'\-?\d+'),
@@ -173,11 +173,11 @@ class Interpreter:
         return match.lastgroup
 
 
-    def printCell(self):
-        self.output += str(self.tape[self.i]) + '\n'
+    def _printCell(self):
+        self._output += str(self._tape[self._i]) + '\n'
 
 
-    def processCond(self, match):
+    def _processCond(self, match):
         s = match.string[match.start():match.end()]
         s = s.replace('He ran into the mountains, but only when ', '')
         cond = s.replace('. This is what happened there:', '')
@@ -205,7 +205,7 @@ class Interpreter:
             val = cond.replace('the stone said ', '')
 
         else:
-            self.has_error = True
+            self._has_error = True
             return 'error'
 
 
@@ -215,7 +215,7 @@ class Interpreter:
 
 
 
-    def processDigitToken(self, match):
+    def _processDigitToken(self, match):
         s = match.string[match.start():match.end()]
         ms = re.compile(r'%s' % rs['number'])
         m = re.search(ms, s)
@@ -225,38 +225,38 @@ class Interpreter:
         return v
 
 
-    def processStoreToken(self, match):
+    def _processStoreToken(self, match):
         s = match.string[match.start():match.end()]
         s = s.replace('Preparing for the storm, he carved ', '')
         s = s.replace(' into the stone.', '')
         return s
 
 
-    def consumeToken(self, token):
+    def _consumeToken(self, token):
         comms = dict()
-        comms['mr'] = self.mr
-        comms['ml'] = self.ml
-        comms['incr'] = self.incr
-        comms['decr'] = self.decr
-        comms['store'] = self.storeVal
-        comms['pin'] = self.getInput
-        comms['pout'] = self.printCell
-        comms['while'] = self.defineLoop
-        comms['loop'] = self.doLoop
-        comms['loopend'] = self.loopend
-        comms['copyval'] = self.copyVal
-        comms['pasteval'] = self.pasteVal
+        comms['mr'] = self._mr
+        comms['ml'] = self._ml
+        comms['incr'] = self._incr
+        comms['decr'] = self._decr
+        comms['store'] = self._storeVal
+        comms['pin'] = self._getInput
+        comms['pout'] = self._printCell
+        comms['while'] = self._defineLoop
+        comms['loop'] = self._doLoop
+        comms['loopend'] = self._loopend
+        comms['copyval'] = self._copyVal
+        comms['pasteval'] = self._pasteVal
         comms[token]()
 
 
-    def consumeTokenList(self):
-        while len(self.tokens) > 0:
-            if self.has_error:
+    def _consumeTokenList(self):
+        while len(self._tokens) > 0:
+            if self._has_error:
                 break
-            self.consumeToken(self.tokens.pop())
+            self._consumeToken(self._tokens.pop())
 
 
-    def tokenize(self, s):
+    def _tokenize(self, s):
         t = [
             ('mr', r'Overhead, the geese flew \d+ miles east\.'),
             ('ml', r'Overhead, the geese flew \d+ miles west\.'),
@@ -283,29 +283,29 @@ class Interpreter:
                 continue
 
             if m.start() != lastend:
-                self.has_error = True
-                self.error = 'Problem with syntax in position %s' % m.start()
+                self._has_error = True
+                self._error = 'Problem with syntax in position %s' % m.start()
                 return output
 
             if m.lastgroup in ['mr', 'ml', 'incr', 'decr']:
                 output.append(m.lastgroup)
-                output.append(self.processDigitToken(m))
+                output.append(self._processDigitToken(m))
 
             elif m.lastgroup == 'store':
                 output.append(m.lastgroup)
-                output.append(self.processStoreToken(m))
+                output.append(self._processStoreToken(m))
 
             elif m.lastgroup == 'while':
                 output.append(m.lastgroup)
-                output.extend(self.processCond(m))
+                output.extend(self._processCond(m))
 
             else:
                 output.append(m.lastgroup)
             lastend = m.end()
 
         if lastend != len(s) and s[-1]!=' ':
-            self.has_error = True
-            self.error = 'Problem with syntax in position'
+            self._has_error = True
+            self._error = 'Problem with syntax in position'
 
         output.reverse()
 
@@ -313,20 +313,20 @@ class Interpreter:
 
 
     def interpret(self, abraham_code, *args):
-        self.buffer = [a for a in args]
+        self.__buffer = [a for a in args]
 
-        self.i = 0
-        self.tape = [0]
-        self.tokens = list()
-        self.loopcons = list()
-        self.loopactions = list()
-        self.cval = 0
-        self.output = ''
+        self._i = 0
+        self._tape = [0]
+        self._tokens = list()
+        self._loopcons = list()
+        self._loopactions = list()
+        self._cval = 0
+        self._output = ''
 
-        self.tokens = self.tokenize(abraham_code)
-        self.consumeTokenList()
-        if self.has_error:
-            return self.error
+        self._tokens = self._tokenize(abraham_code)
+        self._consumeTokenList()
+        if self._has_error:
+            return self._error
         else:
-            return self.output
+            return self._output
 
