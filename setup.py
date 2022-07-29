@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-setup(name='AbrahamInterpreter',
+setup(name='AbeInterpreter',
       version='1.0',
       description='Interpreter the Abraham esolang',
       author='Byron Himes',

@@ -2,15 +2,25 @@
 Esoteric language interpreter
 
 **************************************
+Install:
+--------
+pip install abeinterpreter
+
+**************************************
+
 Basic Usage:
 ------------
+0. Import:
+	import abeinterpreter as ai
 
 1. Instantiate the AbeInterpreter class:
-	ai = AbeInterpreter()
+	interp = ai.AbeInterpreter()
+
 2. Interpret code with .interpret(code):
-	ai.interpret(*some abe code here*)
+	interp.interpret(*some abe code here*)
+
 3. Display output with print:
-	print(ai.interpret(*some abe code here*))
+	print(interp.interpret(*some abe code here*))
 
 **************************************
 Types:	

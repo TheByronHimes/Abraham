@@ -2,11 +2,7 @@ import re
 import operator
 
 
-rs = {
-    'number': '((\-?\d+\.\d*)|(\-?\d+))',
-    'bool': 'True|False',
-    'string': '\".*\"'
-}
+
 
 
 class AbeInterpreter:
@@ -23,6 +19,11 @@ class AbeInterpreter:
         self._output = ''
         self._has_error = False
         self._error = ''
+        self._rs = {
+            'number': '((\-?\d+\.\d*)|(\-?\d+))',
+            'bool': 'True|False',
+            'string': '\".*\"'
+        }
 
     
     def _mr(self):
@@ -163,8 +164,8 @@ class AbeInterpreter:
         tokens = [
             ('float', r'\-?\d+\.\d*'),
             ('int', r'\-?\d+'),
-            ('bool', r'%s' % rs['bool']),
-            ('str', r'%s' % rs['string'])
+            ('bool', r'%s' % self._rs['bool']),
+            ('str', r'%s' % self._rs['string'])
         ]
 
         ms = re.compile('|'.join(['(?P<%s>%s)' % tup for tup in tokens]))
@@ -184,8 +185,8 @@ class AbeInterpreter:
 
         # parse condition
         t = [
-            ('gt', r'they had more than %s fish' % rs['number']),
-            ('lt', r'they had less than %s fish' % rs['number']),
+            ('gt', r'they had more than %s fish' % self._rs['number']),
+            ('lt', r'they had less than %s fish' % self._rs['number']),
             ('eq', r'the stone said .*')
         ]
 
@@ -196,7 +197,7 @@ class AbeInterpreter:
         optype = re.search(ms, cond).lastgroup
 
         if optype in ['gt', 'lt', 'deq']:
-            d = re.search(r'%s' % rs['number'], cond)
+            d = re.search(r'%s' % self._rs['number'], cond)
             if d:
                 val = d.group()
 
@@ -217,7 +218,7 @@ class AbeInterpreter:
 
     def _processDigitToken(self, match):
         s = match.string[match.start():match.end()]
-        ms = re.compile(r'%s' % rs['number'])
+        ms = re.compile(r'%s' % self._rs['number'])
         m = re.search(ms, s)
         v = 0
         if m is not None:
