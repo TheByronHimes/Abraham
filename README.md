@@ -2,6 +2,17 @@
 Esoteric language interpreter
 
 **************************************
+Basic Usage:
+------------
+
+1. Instantiate the AbeInterpreter class:
+	ai = AbeInterpreter()
+2. Interpret code with .interpret(code):
+	ai.interpret(*some abe code here*)
+3. Display output with print:
+	print(ai.interpret(*some abe code here*))
+
+**************************************
 Types:	
 ------
 String: "Hello World!"
