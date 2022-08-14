@@ -36,3 +36,37 @@ def test_nested_loop():
 
     out = out.strip('\n')
     assert out == '4'
+
+
+def test_fib():
+    ai = AbeInterpreter()
+    code = '''
+        He sold 5 sheep.
+        Overhead, the geese flew 2 miles east.
+        He sold 1 sheep.
+        Overhead, the geese flew 2 miles west.
+        
+        He ran into the mountains, but only when they had more than 0 fish. This is what happened there:
+        They paid for their 1 mistakes.
+        Overhead, the geese flew 2 miles east. 
+        One day he stole his neighbor's goods.
+        Overhead, the geese flew 1 miles west.
+        
+        He ran into the mountains, but only when they had more than 0 fish. This is what happened there:
+        They paid for their 1 mistakes.
+        Overhead, the geese flew 1 miles east. 
+        He sold 1 sheep.
+        Overhead, the geese flew 1 miles west.
+        Alas, I digress.
+        
+        He repented and returned the property.
+        Overhead, the geese flew 1 miles west.
+        Alas, I digress.
+        
+        Overhead, the geese flew 2 miles east.
+        And Abraham spoke!
+    '''
+    out = ai.interpret(code).strip('\n')
+    assert out == '8'
+
+
