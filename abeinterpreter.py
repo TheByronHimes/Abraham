@@ -2,9 +2,6 @@ import re
 import operator
 
 
-
-
-
 class AbeInterpreter:
 
     def __init__(self):
@@ -28,7 +25,7 @@ class AbeInterpreter:
     
     def _mr(self):
         raw = self._tokens.pop()
-        v = self._cast(getParmType(raw), raw)
+        v = self._cast(self._getParmType(raw), raw)
         self._i += v
         length = len(self._tape) - 1
         if self._i > length:
@@ -42,6 +39,7 @@ class AbeInterpreter:
         self._i -= v
         if self._i < 0:
             self._has_error = True
+            self._error = 'Not allowed to move left of index 0.'
 
 
     def _incr(self):
@@ -104,7 +102,7 @@ class AbeInterpreter:
         while True:
             if self._tokens[-1] == 'while':
                 self._tokens.pop()
-                self._loopactions[loopIndex].extend(defineLoop())  # include tokens for any inner loops
+                self._loopactions[loopIndex].extend(self._defineLoop())  # include tokens for any inner loops
             if self._tokens[-1] == 'loopend':
                 # can either be loopend token for inner loop or for this loop
                 self._tokens.pop()
@@ -149,15 +147,18 @@ class AbeInterpreter:
         d = dict()
         d['float'] = float
         d['int'] = int
-        d['bool'] = bool
-        d['str'] = str
 
         try:
             if typeString == 'str':
                 val = val.strip('"')
+                return val
+            elif typeString == 'bool':
+                val = (val == 'True')
+                return val
             return d[typeString](val)
         except:
             self._has_error = True
+            self._error = f'Could not cast {val} to type {typeString}'
 
 
     def _getParmType(self, p):
@@ -194,7 +195,13 @@ class AbeInterpreter:
         val = ''
         ms = re.compile('|'.join(["(?P<%s>%s)" % tup for tup in t]))
 
-        optype = re.search(ms, cond).lastgroup
+        try:
+            optype = re.search(ms, cond).lastgroup
+
+        except:
+            self._has_error = True
+            self._error = 'Loop condition syntax is incorrect.'
+            return 'error'
 
         if optype in ['gt', 'lt', 'deq']:
             d = re.search(r'%s' % self._rs['number'], cond)
@@ -314,7 +321,7 @@ class AbeInterpreter:
 
 
     def interpret(self, abraham_code, *args):
-        self.__buffer = [a for a in args]
+        self._buffer = [a for a in args]
 
         self._i = 0
         self._tape = [0]
@@ -330,4 +337,3 @@ class AbeInterpreter:
             return self._error
         else:
             return self._output
-
